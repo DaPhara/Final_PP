@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    {% include "header_style.html" %}
+    <title>Add product</title>
+</head>
+<body>
+<div class="container">
+    <div class="row">
+        <div class="col-md-12">
+            {% include "navbar.html" %}
+        </div>
+        {#        <div class="col-md-12 mt-5">#}
+        {#            <div class="table-responsive">#}
+        {#                <table id="product_table" class="display">#}
+        {#                    <thead>#}
+        {#                    <tr>#}
+        {#                        <th>No.</th>#}
+        {#                        <th>Image</th>#}
+        {#                        <th>Title</th>#}
+        {#                        <th>Cost</th>#}
+        {#                        <th>Price</th>#}
+        {#                        <th>Description</th>#}
+        {#                        <th>Action</th>#}
+        {#                    </tr>#}
+        {#                    </thead>#}
+        {#                    <tbody>#}
+        {#                    {% for item in data %}#}
+        {#                        <tr>#}
+        {#                            <td>{{ loop.index }}</td>#}
+        {#                            <td>#}
+        {#                                <img#}
+        {#                                        style="width: 15%;"#}
+        {#                                        src="/static/image/no-image.png"#}
+        {#                                >#}
+        {#                            </td>#}
+        {#                            <td>{{ item['title'] }}</td>#}
+        {#                            <td>{{ item['cost'] }}</td>#}
+        {#                            <td>{{ item['price'] }}</td>#}
+        {#                            <td>{{ item['description'] }}</td>#}
+        {#                            <td>#}
+        {#                                <a href="#" class="btn btn-sm btn-outline-primary">#}
+        {#                                    <i class="far fa-edit"></i>#}
+        {#                                </a>#}
+        {#                                <a href="#" class="btn btn-sm btn-outline-danger">#}
+        {#                                    <i class="far fa-trash-alt"></i>#}
+        {#                                </a>#}
+        {#                            </td>#}
+        {#                        </tr>#}
+        {#                    {% endfor %}#}
+        {#                    </tbody>#}
+        {#                </table>#}
+        {#            </div>#}
+        {#        </div>#}
+        <div class="col-md-12 mt-5">
+            <div class="card">
+                <div class="card-header">
+                    <h3>Edit Product</h3>
+                    {#                    {{product}}#}
+                </div>
+                <div class="card-body">
+                    <form action="{{ url_for('update') }}" method="post" enctype="multipart/form-data">
+                        <input type="hidden" id="product_id" name="product_id" value="{{ product['id'] }}">
+                        <div class="form-group">
+                            <div style="text-align: center;">
+                                {% if product['image'] != 'no_image' %}
+                                    <img id="thumbnail"
+                                         style="
+                                         max-width: 100%"
+                                         src="/static/image/product/{{ product['image'] }}"
+                                         onerror="this.src='/static/image/image_error.png';"
+                                         alt="image"
+                                    >
+                                {% endif %}
+
+                                {% if product['image'] == 'no_image' %}
+                                    <img
+                                            id="thumbnail"
+                                            style=" max-width: 100%"
+                                            src="/static/image/no-image.png"
+                                            alt="image"
+                                    >
+                                {% endif %}
+                            </div>
+                            <label for="file">Image</label>
+
+                            <input
+                                    type="file"
+                                    accept="image/*"
+                                    class="form-control"
+                                    id="file"
+                                    name="file"
+                                    onchange="showMyImage(this)"
+                            >
+                        </div>
+                        <div class="form-group">
+                            <label for="title">Title</label>
+                            <input value="{{ product['title'] }}" type="text" class="form-control" id="title"
+                                   name="title" autocomplete="off">
+                        </div>
+                        <div class="form-group">
+                            <label for="price">Price</label>
+                            <input value="{{ product['price'] }}" type="number" class="form-control" id="price"
+                                   name="price" autocomplete="off">
+                        </div>
+                        <div class="form-group">
+                            {#                            {{ product['category'] }}#}
+                            <label for="category">Category</label>
+                            <select class="form-control" id="category" name="category">
+                                <option {{ 'selected' if product['category']=='drink' else '' }} value="drink">drink
+                                </option>
+                                <option {{ 'selected' if product['category']=='water' else '' }} value="water">water
+                                </option>
+                                <option {{ 'selected' if product['category']=='beer' else '' }} value="beer">beer
+                                </option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="description">Description</label>
+                            <textarea
+                                    class="form-control" id="description" name="description"
+                                    rows="5"
+                            >{{ product['description'] }}</textarea>
+                        </div>
+                        <button onclick="window.location.href='/product'" type="reset" class="btn btn-danger">Cancel
+                        </button>
+                        <button type="submit" class="btn btn-primary float-right">Save</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+<script>
+    function showMyImage(fileInput) {
+        var file = fileInput.files[0];
+        var reader = new FileReader();
+        reader.onload = function (e) {
+            document.getElementById('thumbnail').setAttribute('src', e.target.result);
+        };
+        reader.readAsDataURL(file);
+    }
+</script>
+
+{% include "footer_script.html" %}
+</html>
