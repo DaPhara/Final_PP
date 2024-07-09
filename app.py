@@ -133,7 +133,11 @@ def submit_new_product():
     price = request.form.get('price')
     category = request.form.get('category')
     description = request.form.get('description')
-    file = request.files['compress_file']
+    if 'compress_file' in request.files:
+        file = request.files['compress_file']
+    else:
+        file = request.files['file']
+
     timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
 
     filename = timestamp + '.' + file.filename
@@ -158,7 +162,7 @@ def submit_new_product():
 
 @app.get('/redirect_with_success')
 def redirect_with_success():
-    flash(f"Product created successfully", "success")
+    flash(f"Change successfully", "success")
     return redirect(url_for('product'))
 
 
@@ -195,26 +199,47 @@ def update():
     category = request.form.get('category')
     description = request.form.get('description')
 
-    file = request.files['file']
-    if file != "":
-        file_path = os.path.join(app.config['UPLOAD_FOLDER'] + '/product/', file.filename)
+    # Handling the original file and cropped image
+    file = request.files.get('compress_file') if 'compress_file' in request.files else request.files.get('file')
+    cropped_image = request.files.get('cropped_image')
 
-    if not os.path.exists(file_path):
-        file.save(file_path)
-    file = conn.execute("""SELECT image FROM product where id =?""", (product_id,))
-    for item in file:
-        if item[0] is not None:
+    # Initialize file_path_db to None
+    file_path_db = None
+
+    # Retrieve existing image name from the database
+    file_db = conn.execute("""SELECT image FROM product WHERE id = ?""", (product_id,))
+    for item in file_db:
+        if item[0] is not None and item[0] != "" and item[0] != "no_image":
             image_name = item[0]
-            file_path = os.path.join(app.config['UPLOAD_FOLDER'] + '/product/', image_name)
-            if os.path.exists(file_path):
-                os.remove(file_path)
+            file_path_db = os.path.join(app.config['UPLOAD_FOLDER'], 'product', image_name)
 
-    res = conn.execute(
-        f"""UPDATE `product` SET title = '{title}', price = {price}, category = '{category}
-            ', description = '{description}', image= '{file.filename}' where id ={product_id}""")
+    # Save new original file if uploaded
+    if file and file.filename != "":
+        if file_path_db and os.path.exists(file_path_db):
+            os.remove(file_path_db)
+        file_path_original = os.path.join(app.config['UPLOAD_FOLDER'], 'product', file.filename)
+        file.save(file_path_original)
+        image_name = file.filename
+
+    # Save cropped image if provided
+    if cropped_image:
+        cropped_image_filename = image_name
+        cropped_image_path = os.path.join(app.config['UPLOAD_FOLDER'], 'crop', cropped_image_filename)
+        cropped_image.save(cropped_image_path)
+        image_name = cropped_image_filename
+
+    # Update database with new data
+    conn.execute(
+        """UPDATE product 
+           SET title = ?, price = ?, category = ?, description = ?, image = ?
+           WHERE id = ?""",
+        (title, price, category, description, image_name, product_id)
+    )
     conn.commit()
-    flash(f"Product created successfully", "success")
+
+    flash("Product updated successfully", "success")
     return redirect(url_for('product'))
+
 
 
 @app.get('/product_destroy')
